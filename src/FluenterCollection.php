@@ -52,39 +52,51 @@ class FluenterCollection extends Collection
         return array_first($results)?->newCollection($results) ?? new static([]);
     }
 
-    public function save(): static
+    public function save(?callable $callback = null): static
     {
-        return $this->saveWithModelCallback();
+        return $this->saveWithModelCallback($callback);
     }
 
-    protected function saveWithModelCallback(callable|null $model_callback = null): static
+    protected function saveWithModelCallback(?callable $model_callback = null): static
     {
-        /** @var array<int, array<int, Model>> $changed_records */
-        $changed_records = [];
-        $changed_fields = [];
+        $updates = [];
+        $columns = [];
 
         foreach ($this as $model) {
             if ($model_callback) {
                 $model_callback($model);
             }
 
-            if ($model->isDirty()) {
-                $dirty = $model->getDirty();
-                $changed_fields += array_fill_keys(array_keys($dirty), true);
-                $changed_records[$model->getKey()] = $model->getAttributes();
-                $model->syncChanges()->syncOriginal();
+            if (! $model->exists || ! $model->isDirty()) {
+                continue;
             }
+
+            if ($model->usesTimestamps()) {
+                $model->updateTimestamps();
+            }
+
+            $updates[] = [
+                'model' => $model,
+                'key' => $model->getRawOriginal($model->getKeyName()) ?? $model->getKey(),
+                'attributes' => $model->getDirty(),
+            ];
+
+            foreach (array_keys($model->getDirty()) as $column) {
+                $columns[$column] = true;
+            }
+
+            $model->syncChanges()->syncOriginal();
         }
 
-        if (!empty($changed_records)) {
-            $model = array_first($this->items);
-
-            $model->newModelQuery()->upsert(
-                values: $changed_records,
-                uniqueBy: $model->getKeyName(),
-                update: array_keys($changed_fields),
-            );
+        if ($updates === []) {
+            return $this;
         }
+
+        BulkUpdateQuery::execute(
+            model: array_first($updates)['model'],
+            updates: $updates,
+            columns: $columns,
+        );
 
         return $this;
     }

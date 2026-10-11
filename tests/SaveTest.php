@@ -28,3 +28,35 @@ it('saves dirty models in the collection', function () {
 
     expect($posts->every(fn ($post) => $post->author_id === $a->id))->toBeTrue();
 });
+
+it('updates rows with different dirty fields without overwriting other values', function () {
+    Post::create(['title' => 'First', 'status' => 'draft']);
+    Post::create(['title' => 'Second', 'status' => 'draft']);
+
+    $posts = Post::all();
+    $posts[0]->title = 'Updated first';
+    $posts[1]->status = 'published';
+
+    $posts->save();
+
+    $stored = Post::orderBy('id')->get();
+
+    expect($stored[0]->title)->toBe('Updated first')
+        ->and($stored[0]->status)->toBe('draft')
+        ->and($stored[1]->title)->toBe('Second')
+        ->and($stored[1]->status)->toBe('published')
+        ->and($posts[0]->wasChanged('title'))->toBeTrue()
+        ->and($posts[1]->wasChanged('status'))->toBeTrue();
+});
+
+    it('does not insert new models', function () {
+    $posts = new FluenterCollection([
+        new Post(['title' => 'First new post']),
+        new Post(['title' => 'Second new post', 'status' => 'published']),
+    ]);
+
+    $posts->save();
+
+    expect($posts->every(fn ($post) => ! $post->exists && $post->isDirty()))->toBeTrue()
+        ->and(Post::query()->count())->toBe(0);
+});

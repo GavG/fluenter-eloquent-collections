@@ -95,11 +95,11 @@ Use `update()` to fill each model with the given attributes and persist the dirt
 $posts->update(['published' => true]);
 ```
 
-Both methods return the same collection. Clean models are not included in the database write. Changed model state is synchronized so Eloquent's `wasChanged()` can report the saved attributes.
+Both methods return the same collection. Only existing models with dirty attributes are included in the database write. New models are left untouched. Changed model state is synchronized so Eloquent's `wasChanged()` can report the saved attributes.
 
 ### Bulk persistence behavior
 
-`save()` and `update()` write changes using a single Eloquent `upsert` query for the dirty models. They do not call each model's individual `save()` method, so per-model saving and saved events are not dispatched. Use individual model saves when those lifecycle events or per-model persistence hooks are required.
+Existing models are updated together with one parameterized `UPDATE` statement that writes their dirty attributes. New models are not inserted. These methods do not call each model's individual `save()` method, so per-model saving and saved events are not dispatched. Use individual model saves when inserting models or when lifecycle events and per-model persistence hooks are required. Do not dirty virtual or non-writable attributes before calling `save()` or `update()`.
 
 ## Development
 

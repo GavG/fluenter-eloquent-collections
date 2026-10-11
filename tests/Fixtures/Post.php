@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[CollectedBy(FluenterCollection::class)]
 class Post extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['author_id', 'title', 'status'];
 
     public function author(): BelongsTo
     {
