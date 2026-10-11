@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use GavG\FluenterEloquentCollections\FluenterCollection;
 use GavG\FluenterEloquentCollections\Tests\Fixtures\Author;
 use GavG\FluenterEloquentCollections\Tests\Fixtures\Post;
 use GavG\FluenterEloquentCollections\Tests\Fixtures\Tag;
@@ -17,7 +18,7 @@ it('plucks a loaded to-one relation as a unique collection of models', function 
 
     $authors = Post::with('author')->get()->pluckRelation('author');
 
-    expect($authors)->toBeInstanceOf(Collection::class)
+    expect($authors)->toBeInstanceOf(FluenterCollection::class)
         ->and($authors)->toHaveCount(2)
         ->and($authors->every(fn ($m) => $m instanceof Author))->toBeTrue()
         ->and($authors->modelKeys())->toEqualCanonicalizing([$a->id, $b->id]);
@@ -46,9 +47,9 @@ it('skips models whose relation is not loaded', function () {
 });
 
 it('returns an empty eloquent collection for an empty collection', function () {
-    $result = (new Collection())->pluckRelation('author');
+    $result = (new FluenterCollection())->pluckRelation('author');
 
-    expect($result)->toBeInstanceOf(Collection::class)->toBeEmpty();
+    expect($result)->toBeInstanceOf(FluenterCollection::class)->toBeEmpty();
 });
 
 it('returns an empty collection when to-many relations are empty', function () {
@@ -63,7 +64,7 @@ it('only includes models from loaded relations when mixed', function () {
     $loaded = Post::with('author')->first();
     $unloaded = Post::first();
 
-    $result = (new Collection([$loaded, $unloaded]))->pluckRelation('author');
+    $result = (new FluenterCollection([$loaded, $unloaded]))->pluckRelation('author');
 
     expect($result)->toHaveCount(1);
 });
@@ -80,4 +81,31 @@ it('uses the related model custom collection class', function () {
 
     expect($tags)->toBeInstanceOf(TagCollection::class)
         ->and($tags)->toHaveCount(2);
+});
+
+it('plucks relations via name', function () {
+    $a = Author::create(['name' => 'A']);
+    Post::create(['title' => '1', 'author_id' => $a->id]);
+
+    $authors = Post::with('author')->get()->authors;
+
+    expect($authors)->toHaveCount(1)
+        ->and($authors->first()->id)->toEqual($a->id)
+        ->and($authors)->toBeInstanceOf(FluenterCollection::class)
+        ->and($authors->first())->toBeInstanceOf(Author::class);
+});
+
+it('plucks nested relations via name', function () {
+    $a = Author::create(['name' => 'A']);
+    $p = Post::create(['title' => '1', 'author_id' => $a->id]);
+    $t = Tag::create(['name' => 'x']);
+    $p->tags()->attach([$t->id]);
+
+    $tags = Tag::with('posts.author')->get();
+    $authors = $tags->posts->authors;
+
+    expect($authors)->toHaveCount(1)
+        ->and($authors->first()->id)->toEqual($a->id)
+        ->and($authors)->toBeInstanceOf(FluenterCollection::class)
+        ->and($authors->first())->toBeInstanceOf(Author::class);
 });

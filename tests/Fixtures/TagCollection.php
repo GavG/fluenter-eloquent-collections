@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace GavG\FluenterEloquentCollections\Tests\Fixtures;
 
-use Illuminate\Database\Eloquent\Collection;
+use GavG\FluenterEloquentCollections\FluenterCollection;
 
-class TagCollection extends Collection
+class TagCollection extends FluenterCollection
 {
 }
