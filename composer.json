@@ -35,13 +35,6 @@
             "GavG\\FluenterEloquentCollections\\Tests\\": "tests/"
         }
     },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "GavG\\FluenterEloquentCollections\\FluenterEloquentCollectionsServiceProvider"
-            ]
-        }
-    },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
