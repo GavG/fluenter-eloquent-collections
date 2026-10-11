@@ -52,24 +52,42 @@ class FluenterCollection extends Collection
         return array_first($results)?->newCollection($results) ?? new static([]);
     }
 
-    public function saveDirty()
+    public function save(callable|null $model_callback = null)
     {
         /** @var array<int, array<int, Model>> $changed_records */
         $changed_records = [];
+        $changed_fields = [];
 
         foreach ($this as $model) {
+            if ($model_callback) {
+                $model_callback($model);
+            }
+
             if ($model->isDirty()) {
-                $changed_records[$model->getKey()] = [
-                    $model->getKeyName() => $model->getKey(),
-                    ...$model->getDirty(),
-                ];
+                $dirty = $model->getDirty();
+                $changed_fields += array_fill_keys(array_keys($dirty), true);
+                $changed_records[$model->getKey()] = $model->getAttributes();
+                $model->syncChanges()->syncOriginal();
             }
         }
 
         if (!empty($changed_records)) {
-            array_first($changed_records)->newModelQuery()->upsert($changed_records);
+            $model = array_first($this->items);
+
+            $model->newModelQuery()->upsert(
+                values: $changed_records,
+                uniqueBy: $model->getKeyName(),
+                update: array_keys($changed_fields),
+            );
         }
 
         return $this;
+    }
+
+    public function update(array $attributes)
+    {
+        return $this->save(
+            fn ($model) => $model->fill($attributes),
+        );
     }
 }
