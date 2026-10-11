@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace GavG\FluenterEloquentCollections;
 
 use Illuminate\Support\Str;
@@ -49,5 +50,26 @@ class FluenterCollection extends Collection
         }
 
         return array_first($results)?->newCollection($results) ?? new static([]);
+    }
+
+    public function saveDirty()
+    {
+        /** @var array<int, array<int, Model>> $changed_records */
+        $changed_records = [];
+
+        foreach ($this as $model) {
+            if ($model->isDirty()) {
+                $changed_records[$model->getKey()] = [
+                    $model->getKeyName() => $model->getKey(),
+                    ...$model->getDirty(),
+                ];
+            }
+        }
+
+        if (!empty($changed_records)) {
+            array_first($changed_records)->newModelQuery()->upsert($changed_records);
+        }
+
+        return $this;
     }
 }

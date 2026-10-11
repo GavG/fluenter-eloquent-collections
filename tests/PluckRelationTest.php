@@ -7,7 +7,6 @@ use GavG\FluenterEloquentCollections\Tests\Fixtures\Author;
 use GavG\FluenterEloquentCollections\Tests\Fixtures\Post;
 use GavG\FluenterEloquentCollections\Tests\Fixtures\Tag;
 use GavG\FluenterEloquentCollections\Tests\Fixtures\TagCollection;
-use Illuminate\Database\Eloquent\Collection;
 
 it('plucks a loaded to-one relation as a unique collection of models', function () {
     $a = Author::create(['name' => 'A']);
