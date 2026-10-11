@@ -52,7 +52,12 @@ class FluenterCollection extends Collection
         return array_first($results)?->newCollection($results) ?? new static([]);
     }
 
-    public function save(callable|null $model_callback = null)
+    public function save(): static
+    {
+        return $this->saveWithModelCallback();
+    }
+
+    protected function saveWithModelCallback(callable|null $model_callback = null): static
     {
         /** @var array<int, array<int, Model>> $changed_records */
         $changed_records = [];
@@ -84,10 +89,10 @@ class FluenterCollection extends Collection
         return $this;
     }
 
-    public function update(array $attributes)
+    public function update(array $attributes): static
     {
-        return $this->save(
-            fn ($model) => $model->fill($attributes),
+        return $this->saveWithModelCallback(
+            model_callback: fn ($model) => $model->fill($attributes),
         );
     }
 }
