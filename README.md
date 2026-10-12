@@ -69,7 +69,7 @@ Property access uses the same loaded-relation behavior as `pluckRelation()`.
 
 ## Save changes across a collection
 
-Modify models and call `save()` to persist dirty models together:
+Modify models and call `bulkSaveDirty()` to persist dirty models together:
 
 ```php
 $posts = Post::all();
@@ -78,13 +78,13 @@ $posts->each(function (Post $post) {
     $post->published = true;
 });
 
-$posts->save();
+$posts->bulkSaveDirty();
 ```
 
-An optional callback can make the changes as part of the save operation:
+An optional callback can make the changes as part of the bulkSaveDirty operation:
 
 ```php
-$posts->save(function (Post $post) {
+$posts->bulkSaveDirty(function (Post $post) {
     $post->published = true;
 });
 ```

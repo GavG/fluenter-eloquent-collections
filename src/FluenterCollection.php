@@ -52,12 +52,12 @@ class FluenterCollection extends Collection
         return array_first($results)?->newCollection($results) ?? new static([]);
     }
 
-    public function save(?callable $callback = null): static
+    public function bulkSaveDirty(?callable $callback = null): static
     {
-        return $this->saveWithModelCallback($callback);
+        return $this->bulkSaveDirtyWithModelCallback($callback);
     }
 
-    protected function saveWithModelCallback(?callable $model_callback = null): static
+    protected function bulkSaveDirtyWithModelCallback(?callable $model_callback = null): static
     {
         $updates = [];
         $columns = [];
@@ -103,7 +103,7 @@ class FluenterCollection extends Collection
 
     public function update(array $attributes): static
     {
-        return $this->saveWithModelCallback(
+        return $this->bulkSaveDirtyWithModelCallback(
             model_callback: fn ($model) => $model->fill($attributes),
         );
     }

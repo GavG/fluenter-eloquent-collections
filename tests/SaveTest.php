@@ -17,7 +17,7 @@ it('saves dirty models in the collection', function () {
         $post->author_id = $a->id;
     });
 
-    $saved = $posts->save();
+    $saved = $posts->bulkSaveDirty();
 
     expect($saved)->toBeInstanceOf(FluenterCollection::class)
         ->and($saved->every(
@@ -37,7 +37,7 @@ it('updates rows with different dirty fields without overwriting other values', 
     $posts[0]->title = 'Updated first';
     $posts[1]->status = 'published';
 
-    $posts->save();
+    $posts->bulkSaveDirty();
 
     $stored = Post::orderBy('id')->get();
 
@@ -55,7 +55,7 @@ it('updates rows with different dirty fields without overwriting other values', 
         new Post(['title' => 'Second new post', 'status' => 'published']),
     ]);
 
-    $posts->save();
+    $posts->bulkSaveDirty();
 
     expect($posts->every(fn ($post) => ! $post->exists && $post->isDirty()))->toBeTrue()
         ->and(Post::query()->count())->toBe(0);
