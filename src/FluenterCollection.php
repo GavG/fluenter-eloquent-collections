@@ -36,7 +36,7 @@ class FluenterCollection extends Collection
 
             $related = $model->getRelation($relation);
 
-            if ($related instanceof self) {
+            if ($related instanceof Collection) {
                 foreach ($related as $item) {
                     $results[$item->getKey()] = $item;
                 }
