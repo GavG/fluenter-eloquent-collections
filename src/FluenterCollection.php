@@ -75,13 +75,15 @@ class FluenterCollection extends Collection
                 $model->updateTimestamps();
             }
 
+            $dirty = $model->getDirty();
+
             $updates[] = [
                 'model' => $model,
                 'key' => $model->getRawOriginal($model->getKeyName()) ?? $model->getKey(),
-                'attributes' => $model->getDirty(),
+                'attributes' => $dirty,
             ];
 
-            foreach (array_keys($model->getDirty()) as $column) {
+            foreach (array_keys($dirty) as $column) {
                 $columns[$column] = true;
             }
 
